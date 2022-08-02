@@ -74,10 +74,9 @@ def ext_resources_arn(value, rule_obj, path):
 
     if not re.fullmatch(arn_regex, value):
         print(
-            "ARN '{}' is not valid, it should like like arn:aws:s3:::yourbucket".format(
-                value
-            )
+            f"ARN '{value}' is not valid, it should like like arn:aws:s3:::yourbucket"
         )
+
         return False
 
     return True
@@ -87,7 +86,7 @@ def ext_resources_arn(value, rule_obj, path):
 def ext_resources_host(value, rule_obj, path):
 
     if not re.fullmatch(host_regex, value):
-        print("Host '{}' is not valid".format(value))
+        print(f"Host '{value}' is not valid")
         return False
 
     return True
@@ -97,7 +96,7 @@ def ext_resources_host(value, rule_obj, path):
 def ext_resources_controlled_access(value, rule_obj, path):
 
     if not re.fullmatch(controlled_access_regex, value):
-        print("Controlled Access string '{}' is not valid".format(value))
+        print(f"Controlled Access string '{value}' is not valid")
         return False
 
     return True
@@ -107,7 +106,7 @@ def ext_resources_controlled_access(value, rule_obj, path):
 def ext_resources_explore(value, rule_obj, path):
 
     if not re.fullmatch(explore_regex, value):
-        print("Explore string '{}' is not a valid link".format(value))
+        print(f"Explore string '{value}' is not a valid link")
         return False
 
     return True
@@ -121,14 +120,12 @@ def get_bucket_region(url):
 
     if r.status_code == requests.codes.not_found:
         print(r.headers)
-        print("{} {} {}".format(r.status_code, r.reason, r.url))
-        raise Exception(
-            "Bucket {} doesn't exist or there was a momentary glitch".format(url)
-        )
+        print(f"{r.status_code} {r.reason} {r.url}")
+        raise Exception(f"Bucket {url} doesn't exist or there was a momentary glitch")
 
-    if not "x-amz-bucket-region" in r.headers:
+    if "x-amz-bucket-region" not in r.headers:
         print(r.headers)
-        print("{} {} {}".format(r.status_code, r.reason, r.url))
+        print(f"{r.status_code} {r.reason} {r.url}")
         raise Exception("Bucket region missing from request header?")
 
     return r.headers["x-amz-bucket-region"]
@@ -161,21 +158,20 @@ def ext_valid_bucket_regions(value, rule_obj, path):
     if value["Type"] == "S3 Bucket":
         bucket = value["ARN"]
         parts = bucket.split(":::")
-        if not parts[0] == "arn:aws:s3":
+        if parts[0] != "arn:aws:s3":
             # This is probably not on public aws so we can't check
             return True
         bucket = parts[1]
         parts = bucket.split("/")
         bucket = parts[0]
-        url = "https://{}.s3.amazonaws.com".format(bucket)
+        url = f"https://{bucket}.s3.amazonaws.com"
 
         region = get_bucket_region(url)
-        if not value["Region"].lower() == region.lower():
+        if value["Region"].lower() != region.lower():
             print(
-                "The region for bucket {} is listed as {} but is actually {}".format(
-                    bucket, value["Region"], region
-                )
+                f'The region for bucket {bucket} is listed as {value["Region"]} but is actually {region}'
             )
+
             return False
 
     return True
